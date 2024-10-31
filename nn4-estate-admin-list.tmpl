@@ -1,0 +1,323 @@
+<!-- -*- mode: html; tab-width: 4; coding: utf-8; -*- -->
+<style type="text/css">
+<!--
+.column-channel-serial {
+  width: 10ex;
+}
+.column-type {
+  width: 10%;
+}
+.column-station {
+  width: 10%;
+}
+-->
+</style>
+<?php
+if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') {
+	$this_scheme = 'https';
+} else {
+	$this_scheme = 'http';
+}
+$this_server_name = $_SERVER['SERVER_NAME'];
+$this_server_port = $_SERVER['SERVER_PORT'];
+$this_script_name = $_SERVER['SCRIPT_NAME'];
+
+if (isset($_REQUEST['page'])) {
+	$this_page = $_REQUEST['page'];
+} else {
+	$this_page = '';
+}
+
+$page_next = $page + 1;
+$page_prev = $page - 1;
+$page_last = intval(($nn4_estate_num_total - 1) / $limit) + 1;
+
+$flg_prev_page = $page > 1;
+$flg_next_page = $page >= $page_last;
+
+$url_this_page
+	= sprintf('%s://%s:%s%s?page=%s&sort=%s&paged=%d&limit=%d&type=%s&station=%s',
+			  $this_scheme, $this_server_name, $this_server_port,
+			  $this_script_name, $this_page, urlencode($sort),
+			  $page, $limit, $q_type, $q_station_id);
+$url_first_page
+	= sprintf('%s://%s:%s%s?page=%s&sort=%s&paged=%d&limit=%d&type=%s&station=%s',
+			  $this_scheme, $this_server_name, $this_server_port,
+			  $this_script_name, $this_page, urlencode($sort),
+			  1, $limit, $q_type, $q_station_id);
+$url_prev_page
+	= sprintf('%s://%s:%s%s?page=%s&sort=%s&paged=%d&limit=%d&type=%s&station=%s',
+			  $this_scheme, $this_server_name, $this_server_port,
+			  $this_script_name, $this_page, urlencode($sort),
+			  $page_prev, $limit, $q_type, $q_station_id);
+$url_next_page
+	= sprintf('%s://%s:%s%s?page=%s&sort=%s&paged=%d&limit=%d&type=%s&station=%s',
+			  $this_scheme, $this_server_name, $this_server_port,
+			  $this_script_name, $this_page, urlencode($sort),
+			  $page_next, $limit, $q_type, $q_station_id);
+$url_last_page
+	= sprintf('%s://%s:%s%s?page=%s&sort=%s&paged=%d&limit=%d&type=%s&station=%s',
+			  $this_scheme, $this_server_name, $this_server_port,
+			  $this_script_name, $this_page, urlencode($sort),
+			  $page_last, $limit, $q_type, $q_station_id);
+
+// 種目一覧、最寄り駅一覧
+$select_type_items = array();
+$select_station_items = array();
+if ($page_last > 1 || $q_type != '') {
+	foreach ($nn4_estate_arr_type as $s_type => $s_type_val) {
+		$select_type_items[$s_type] = $s_type_val;
+	}
+}
+if ($page_last > 1 || $q_station_id != '') {
+	foreach ($nn4_arr_station as $s_station => $s_station_val) {
+		$select_station_items[$s_station] = $s_station_val;
+	}
+}
+if ($page_last == 1 && ($q_type == '' || $q_station_id == '')) {
+	foreach ($nn4_estate_list as $nn4_estate_info) {
+		if ($q_type == '') {
+			$estate_type = $nn4_estate_info['type'];
+			if (!array_key_exists($estate_type, $select_type_items)) {
+				$select_type_items[$estate_type]
+					= $nn4_estate_arr_type[$estate_type];
+			}
+		}
+
+		if ($q_station_id == ''
+			&& isset($nn4_estate_info['transport'][0]['railway_station_id'])) {
+			$estate_station_id
+				= $nn4_estate_info['transport'][0]['railway_station_id'];
+			if (!array_key_exists($estate_station_id,
+								  array_keys($select_station_items))) {
+				$select_station_items[$estate_station_id]
+					= $nn4_arr_station[$estate_station_id];
+			}
+		}
+	}
+}
+?>
+<script type="text/javascript">
+<!--
+function deleteItem(id)
+{
+	document.getElementById('del-item-id').value = id;
+	document.getElementById('del-item').submit();
+	return true;
+}
+
+function getAction(id)
+{
+	var obj_action = document.getElementById(id);
+	return obj_action.options[obj_action.selectedIndex].value;
+}
+
+function collectCheckedItems(node_name)
+{
+	var obj_form = document.getElementById(node_name);
+	var inputs = getChildInputs(obj_form, 'checkbox');
+	var del_item_id = new Array();
+
+	for (var i = 0; i < inputs.length; i++) {
+		if (inputs[i].checked && inputs[i].value != '') {
+			del_item_id.push(inputs[i].value);
+		}
+	}
+
+	return del_item_id.join(',');
+}
+
+function getChildInputs(node, type)
+{
+	var inputs = new Array();
+	var child_elements = getChildElements(node);
+	for (var i = 0; i < child_elements.length; i++) {
+		if (child_elements[i].nodeName == 'INPUT' && child_elements[i].type == type) {
+			inputs.push(child_elements[i]);
+		}
+	}
+
+	return inputs;
+}
+
+function getChildElements(node)
+{
+	var elements = new Array();
+	var child_nodes = node.childNodes;
+
+	for (var i = 0; i < child_nodes.length; i++) {
+		if (child_nodes[i].nodeType == 1) {
+			elements.push(child_nodes[i]);
+			chldchld = getChildElements(child_nodes[i]);
+			for (var j = 0; j < chldchld.length; j++) {
+				elements.push(chldchld[j]);
+			}
+		}
+	}
+
+	return elements;
+}
+
+// -->
+</script>
+<form id="del-item" action="<?= $this_script_name ?>" method="get">
+  <input type="hidden" name="page" value="nn4-estate-add" />
+  <input type="hidden" name="mode" value="delete" />
+  <input type="hidden" id="del-item-id" name="entry_post_id" value="" />
+</form>
+<div class="wrap">
+  <h2>不動産一覧 <a class="add-new-h2" href="<?= esc_attr($this_script_name) ?>?page=nn4-estate-add">新規追加</a></h2>
+<?php
+if ($nn4_estate_last_err_msg != '') {
+?>
+  <div id="message" class="error-message"><p><?= esc_html($nn4_estate_last_err_msg) ?></p></div>
+<?php
+}
+?>
+  <form id="posts-filter" action="<?= $this_script_name ?>" method="get">
+	<input type="hidden" name="page" value="<?= $this_page ?>">
+	<input type="hidden" name="sort" value="<?= $sort ?>">
+	<input type="hidden" name="limit" value="<?= $limit ?>">
+    <input name="post_status" class="post_status_page" value="all" type="hidden" />
+	<input name="post_type" class="post_type_page" value="post" type="hidden" />
+
+	<input id="_wpnonce" name="_wpnonce" value="1676d126b7" type="hidden">
+	<input name="_wp_http_referer" value="/wordpress/wp-admin/edit.php" type="hidden">
+
+	<div class="tablenav top">
+	  <div class="alignleft actions bulkactions">
+		<select id="action_type" name="action_type">
+		  <option value="" selected="selected">一括操作</option>
+		  <option value="delete">削除</option>
+		</select>
+		<input name="" id="doaction" class="button action" value="適用" type="button" onClick="var action_type = getAction('action_type'); if (action_type == 'delete') { var checked_id = collectCheckedItems('form-item-list'); if (checked_id == '') { alert('項目が選択されていません。'); } else { deleteItem(checked_id); } }">
+	  </div>
+	  <div class="alignleft actions">
+		<select name="type" id="type" class="postform">
+		  <option value=""<?php if ($q_type == '') { ?> selected<?php } ?>>種目指定なし</option>
+<?php
+foreach ($select_type_items as $type_value => $type_text) {
+?>
+		  <option value="<?= $type_value ?>"<?php if ($q_type == $type_value) { ?> selected<?php } ?>><?= $type_text ?></option>
+<?
+}
+?>
+		</select>
+		<select name="station" id="station" class="postform">
+		  <option value=""<?php if ($q_station_id == '') { ?> selected<?php } ?>>最寄り駅指定なし</option>
+<?php
+foreach ($select_station_items as $station_value => $station_text) {
+?>
+		  <option value="<?= $station_value ?>"<?php if ($q_station_id == $station_value) { ?> selected<?php } ?>><?= $station_text ?></option>
+<?
+}
+?>
+		</select>
+		<input name="" id="post-query-submit" class="button" value="絞り込み検索" type="submit"></div>
+	  <div class="tablenav-pages"><span class="displaying-num"><?= $nn4_estate_num_total ?>項目</span>
+		<span class="pagination-links"><a class="first-page disabled" title="最初のページへ" href="<?= $url_first_page ?>">«</a>
+		  <a class="prev-page<?php if (!$flg_prev_page) { ?> disabled<?php } ?>" title="前のページへ" href="<?= $url_prev_page ?>">‹</a>
+		  <span class="paging-input"><input class="current-page" title="現在のページ" name="paged" value="<?= $page ?>" size="1" type="text"> / <span class="total-pages"><?= $page_last ?></span></span>
+		  <a class="next-page<?php if (!$flg_next_page) { ?> disabled<?php } ?>" title="次のページへ" href="<?= $url_next_page ?>">›</a>
+		  <a class="last-page" title="最後のページへ" href="<?= $url_last_page ?>">»</a></span></div><input name="mode" value="list" type="hidden">
+	  <br class="clear">
+	</div>
+  </form>
+
+  <form id="form-item-list">
+	<table class="wp-list-table widefat fixed posts">
+	  <thead>
+<?php
+if ($sort == '+name') {
+	$sort_name_dir = 'asc';
+	$sort_name_q = urlencode('-name');
+} else {
+	$sort_name_dir = 'desc';
+	$sort_name_q = urlencode('+name');
+}
+$url_sort_name
+	= sprintf('%s://%s:%s%s?page=%s&sort=%s&paged=%d&limit=%d&type=%s&station=%s',
+			  $this_scheme, $this_server_name, $this_server_port,
+			  $this_script_name, $this_page, $sort_name_q,
+			  $page, $limit, $q_type, $q_station_id);
+if ($sort == '+type') {
+	$sort_type_dir = 'asc';
+	$sort_type_q = urlencode('-type');
+} else {
+	$sort_type_dir = 'desc';
+	$sort_type_q = urlencode('+type');
+}
+$url_sort_type
+	= sprintf('%s://%s:%s%s?page=%s&sort=%s&paged=%d&limit=%d&type=%s&station=%s',
+			  $this_scheme, $this_server_name, $this_server_port,
+			  $this_script_name, $this_page, $sort_type_q,
+			  $page, $limit, $q_type, $q_station_id);
+if ($sort == '+station') {
+	$sort_station_dir = 'asc';
+	$sort_station_q = urlencode('-station');
+} else {
+	$sort_station_dir = 'desc';
+	$sort_station_q = urlencode('+station');
+}
+$url_sort_station
+	= sprintf('%s://%s:%s%s?page=%s&sort=%s&paged=%d&limit=%d&type=%s&station=%s',
+			  $this_scheme, $this_server_name, $this_server_port,
+			  $this_script_name, $this_page, $sort_station_q,
+			  $page, $limit, $q_type, $q_station_id);
+if ($sort == '+address') {
+	$sort_address_dir = 'asc';
+	$sort_address_q = urlencode('-address');
+} else {
+	$sort_address_dir = 'desc';
+	$sort_address_q = urlencode('+address');
+}
+$url_sort_address
+	= sprintf('%s://%s:%s%s?page=%s&sort=%s&paged=%d&limit=%d&type=%s&station=%s',
+			  $this_scheme, $this_server_name, $this_server_port,
+			  $this_script_name, $this_page, $sort_address_q,
+			  $page, $limit, $q_type, $q_station_id);
+?>
+		<tr>
+		  <th id="cb" class="manage-column column-cb check-column" style="" scope="col"><label class="screen-reader-text" for="cb-select-all-1">すべて選択</label><input id="cb-select-all-1" type="checkbox" value="" /></th>
+		  <th id="channel_serial" class="manage-column column-channel-serial" style="" scope="col"><span>シリアル</span></th>
+		  <th id="name" class="manage-column column-name sortable <?= $sort_name_dir ?>" style="" scope="col"><a href="<?= $url_sort_name ?>"><span>物件名</span><span class="sorting-indicator"></span></a></th>
+		  <th id="type" class="manage-column column-type sortable <?= $sort_type_dir ?>" style="" scope="col"><a href="<?= $url_sort_type ?>"><span>種目</span><span class="sorting-indicator"></span></a></th>
+		  <th id="station" class="manage-column column-station sortable <?= $sort_station_dir ?>" style="" scope="col"><a href="<?= $url_sort_station ?>"><span>最寄り駅</span><span class="sorting-indicator"></span></a></th>
+		  <th id="address" class="manage-column column-address sortable <?= $sort_address_dir ?>" style="" scope="col"><a href="<?= $url_sort_address ?>"><span>住所</span><span class="sorting-indicator"></span></a></th>
+		</tr>
+	  </thead>
+	  <tfoot>
+		<tr>
+		  <th class="manage-column column-cb check-column" style="" scope="col"><label class="screen-reader-text" for="cb-select-all-2">すべて選択</label><input id="cb-select-all-2" type="checkbox" value="" /></th>
+		  <th class="manage-column column-channel-serial" style="" scope="col"><span>シリアル</span></th>
+		  <th class="manage-column column-name sortable <?= $sort_name_dir ?>" style="" scope="col"><a href="<?= $url_sort_name ?>"><span>物件名</span><span class="sorting-indicator"></span></a></th>
+		  <th class="manage-column column-type sortable <?= $sort_type_dir ?>" style="" scope="col"><a href="<?= $url_sort_type ?>"><span>種目</span><span class="sorting-indicator"></span></a></th>
+		  <th class="manage-column column-station sortable <?= $sort_station_dir ?>" style="" scope="col"><a href="<?= $url_sort_station ?>"><span>最寄り駅</span><span class="sorting-indicator"></span></a></th>
+		  <th class="manage-column column-address sortable <?= $sort_address_dir ?>" style="" scope="col"><a href="<?= $url_sort_address ?>"><span>住所</span><span class="sorting-indicator"></span></a></th>
+		</tr>
+	  </tfoot>
+	  <tbody id="the-list">
+<?php
+for ($i = 0; $i < count($nn4_estate_list); $i++) {
+    $alternate = ($i % 2) ? '' : ' alternate';
+    $nn4_estate_info = $nn4_estate_list[$i];
+?>
+		<tr id="post-<?= $nn4_estate_info['id'] ?>" class="post-<?= $nn4_estate_info['id'] ?> type-post status-draft format-standard hentry category-1<?= $alternate ?> iedit level-0">
+		  <th class="check-column" scope="row"><label class="screen-reader-text" for="cb-select-<?= $nn4_estate_info['id'] ?>"><?= esc_html($nn4_estate_info['name']) ?>を選択</label><input id="cb-select-<?= $nn4_estate_info['id'] ?>" type="checkbox" value="<?= $nn4_estate_info['ap_aux']['post_id'] ?>" name="post[]" /><div class="locked-indicator"></div></th>
+		  <td class="post-channel-serial page-channel-serial column-channel-serial"><?= esc_html($nn4_estate_info['ch_serial']) ?></td>
+		  <td class="post-name page-name column-name"><strong><a class="row-name" title="「<?= esc_attr($nn4_estate_info['name']) ?>」を編集する" href="<?= esc_attr($this_script_name . '?page=nn4-estate-add&mode=editinput&entry_post_id=' . $nn4_estate_info['ap_aux']['post_id']) ?>"><?= esc_html($nn4_estate_info['name']) ?></a></strong><div class="locked-info"><span class="locked-avatar"></span><span class="locked-text"></span></div><div class="row-actions"><span class="edit"><a href="<?= esc_attr($this_script_name . '?page=nn4-estate-add&mode=editinput&entry_post_id=' . $nn4_estate_info['ap_aux']['post_id']) ?>" title="この項目を編集">編集</a> | </span><span class="trash"><a class="submitdelete" title="この項目を削除する " href="#" onClick="if (confirm('<?= esc_js($nn4_estate_info['ch_serial']) ?>「<?= esc_js($nn4_estate_info['name']) ?>」を削除しますか？\n[OK] をクリックすると即時削除が実行されます。')) { deleteItem('<?= esc_js($nn4_estate_info['ap_aux']['post_id']) ?>'); } return false;">削除</a> | </span><span class="view"><a href="<?= get_permalink($nn4_estate_info['ap_aux']['post_id']) ?>" title="「<?= esc_attr($nn4_estate_info['name']) ?>」を表示" rel="permalink">表示</a></span></div></td>
+		  <td class="post-type page-type column-type"><?= esc_html($nn4_estate_arr_type[$nn4_estate_info['type']]) ?></td>
+		  <td class="post-station page-station column-station"><?php
+foreach ($nn4_estate_info['transport'] as $transport) {
+?><?=esc_html($transport['railway_station_name']) ?><br /><?php
+}
+?></td>
+		  <td class="post-station page-station column-station"><?= esc_html($nn4_estate_info['pref_name'] . $nn4_estate_info['address1'] . $nn4_estate_info['address2']) ?></td>
+		</tr>
+<?php
+}
+?>
+	  </tbody>
+	</table>
+  </form>
+</div>

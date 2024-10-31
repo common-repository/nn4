@@ -1,0 +1,32 @@
+<!-- -*- mode: html; tab-width: 4; coding: utf-8; -*- -->
+<div class="wrap">
+<?php
+if ($_REQUEST['settings-updated']) {
+?>
+  <div id="message" class="updated updated-message">
+	<p>設定を更新しました。</p>
+  </div>
+<?php
+}
+?>
+  <h2>設定</h2>
+  <form action="options.php" method="post">
+    <input type="hidden" name="action" value="update" />
+	<input type="hidden" name="page_options" value="nn4_estate_image_key_format" />
+<?php
+	wp_nonce_field('update-options');
+?>
+	<table class="form-table">
+	  <tr valign="top">
+		<th scope="row"><label for="entry_image_key_format">画像識別用キーの書式</label></th>
+		<td><input type="text" id="entry_image_key_format" name="nn4_estate_image_key_format" value="<?= esc_attr($entry_image_key_format) ?>" class="regular-text" /><br />
+		  <span style="font-size: 90%">※テンプレートで画像を識別するためのキーを指定します。<br />
+		  <code>sprintf()</code> 関数の書式に準じます。<br />
+		  通し番号を挿入する箇所は <code>%d</code> で表します。<br />
+		  桁数を表す場合は <code>%</code> と <code>d</code> の間に桁数を記述します。<br />
+		  たとえば、通し番号を2桁で挿入するには <code>%02d</code> とします。</span></td>
+	  </tr>
+	</table>
+	<p class="submit"><input type="submit" class="button-primary" value="<?php _e('Save Changes'); ?>" /></p>
+  </form>
+</div>

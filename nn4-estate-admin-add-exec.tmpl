@@ -1,0 +1,16 @@
+<!-- -*- mode: html; tab-width: 4; coding: utf-8; -*- -->
+<?php
+if ($mode == 'confirm') {
+	$op_type = 'add';
+	$op_name = '新規追加';
+} else {  // $mode == 'editconfirm'
+	$op_type = 'edit';
+	$op_name = '編集';
+}
+?>
+<div class="wrap">
+  <h2><?= $op_name ?> - 完了</h2>
+  <div id="message" class="updated below-h2">
+	<p>登録が完了しました。</p>
+  </div>
+</div>

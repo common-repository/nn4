@@ -1,0 +1,472 @@
+<!-- -*- mode: html; tab-width: 4; coding: utf-8; -*- -->
+<script type="text/javascript">
+<!--
+var image_key_format = '<?= esc_js($entry_image_key_format) ?>';
+
+function updateImageKey(idx)
+{
+	var obj_entry_image = document.getElementById('entry-image');
+	var obj_image_key = document.getElementById('image_key[' + idx + ']');
+
+	var entry_image_decoded = eval('(' + obj_entry_image.value + ')');
+	entry_image_decoded[idx].<?= $apid ?>_aux = { "image_key": obj_image_key.value };
+	obj_entry_image.value = JSON.stringify(entry_image_decoded);
+}
+
+function updateTransport(idx, t)
+{
+	var obj_entry_transport = document.getElementById('entry-transport');
+	var obj_station = document.getElementById('entry-station-id[' + idx + ']');
+	var obj_minutes = document.getElementById('entry-minutes-by-foot[' + idx + ']');
+
+	var entry_transport_decoded = eval('(' + obj_entry_transport.value + ')');
+	entry_transport_decoded[idx] = {
+		railway_station_id: obj_station.value,
+		minutes: obj_minutes.value,
+	};
+	obj_entry_transport.value = JSON.stringify(entry_transport_decoded);
+
+	if ((obj_station.value == '' && obj_minutes.value != '') || (obj_station.value != '' && obj_minutes.value == '')) {
+		if (t == 'station') {
+			obj_minutes.focus();
+		} else { // t == 'minutes'
+			obj_station.focus();
+		}
+	}
+}
+
+function updateAgent(idx, t)
+{
+	var obj_entry_agent = document.getElementById('entry-agent');
+	var obj_agent = document.getElementById('entry-agent-id[' + idx + ']');
+	var obj_agent_position = document.getElementById('entry-agent-position-id[' + idx + ']');
+
+	var entry_agent_decoded = eval('(' + obj_entry_agent.value + ')');
+	entry_agent_decoded[idx] = {
+		id: obj_agent.value,
+		position_id: obj_agent_position.value,
+	};
+	obj_entry_agent.value = JSON.stringify(entry_agent_decoded);
+
+	if ((obj_agent.value == '' && obj_agent_position.value != '') || (obj_agent.value != '' && obj_agent_position.value == '')) {
+		if (t == 'agent') {
+			obj_agent_position.focus();
+		} else { // t == 'position'
+			obj_agent.focus();
+		}
+	}
+}
+
+function updateLandDim(s)
+{
+	var obj_land_dim = document.getElementById('entry-land-dim' + s);
+	var obj_pyeong = document.getElementById('entry-pyeong' + s);
+
+	if (obj_land_dim.value != '' && (obj_pyeong.value == '' || obj_pyeong.value == 'NaN')) {
+		obj_pyeong.value = Math.round(obj_land_dim.value * 10 * 121 / 400) / 10;
+	}
+}
+
+function updatePyeong(s)
+{
+	var obj_land_dim = document.getElementById('entry-land-dim' + s);
+	var obj_pyeong = document.getElementById('entry-pyeong' + s);
+
+	if ((obj_land_dim.value == '' || obj_land_dim.value == 'NaN') && obj_pyeong.value != '') {
+		obj_land_dim.value = Math.round(obj_pyeong.value * 10 * 400 / 121) / 10;
+	}
+}
+// -->
+</script>
+<style type="text/css">
+<!--
+.column-name {
+  width: 20%;
+}
+div.image-preview img {
+  max-width: 100px;
+  max-height: 100px;
+  margin: 0 10px 5px 10px;
+  border: 1px solid #ccc;
+}
+div.image-preview input {
+  width: 100px;
+  margin: 5px 10px;
+  padding: 0;
+  border: 1px solid #fff;
+}
+div.image-preview div {
+  float: left;
+  text-align: center;
+}
+-->
+</style>
+<?php
+if ($mode == 'input') {
+	$op_type = 'add';
+	$op_name = '新規追加';
+	$op_confirm = 'confirm';
+} else {  // $mode == 'editinput'
+	$op_type = 'edit';
+	$op_name = '編集';
+	$op_confirm = 'editconfirm';
+}
+
+$this_script_name = $_SERVER['SCRIPT_NAME'];
+if (isset($_REQUEST['page'])) {
+	$this_page = $_REQUEST['page'];
+} else {
+	$this_page = '';
+}
+?>
+<div class="wrap">
+  <h2><?= $op_name ?> - 項目入力</h2>
+<?php
+if ($nn4_estate_last_err_msg != '') {
+?>
+  <div id="message" class="error-message"><p><?= nl2br(esc_html(implode("\n", $nn4_estate_last_err_msg))) ?></p></div>
+<?php
+}
+?>
+  <form id="posts-filter" action="<?= $this_script_name ?>" method="get">
+	<input type="hidden" name="page" value="<?= $this_page ?>" />
+	<input type="hidden" name="mode" value="<?= $op_confirm ?>" />
+<?php
+if ($op_type == 'edit') {
+?>
+	<input type="hidden" name="entry_post_id" value="<?= $entry_post_id ?>" />
+<?php
+}
+?>
+	<input type="hidden" name="chktoken" value="<?= $chktoken ?>" />
+	<div class="alignleft actions" style="margin-bottom: 20px">
+	  <input type="submit" value="確認画面へ" class="button-primary" />
+	</div>
+	<table class="wp-list-table widefat fixed posts">
+	  <thead>
+		<tr>
+		  <th id="name" class="manage-column column-name" style="" scope="col"><span>項目名</span></th>
+		  <th id="value" class="manage-column column-value" style="" scope="col"><span>値</span></th>
+		</tr>
+	  </thead>
+	  <tbody id="the-list">
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">物件名 <span style="font-size: 90%; color: #f00;">※必須</span></th>
+		  <td class="post-name page-name column-name"><input type="text" name="entry_name" size="40" value="<?= esc_attr($entry_name) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">物件種目</th>
+		  <td class="post-type page-type column-type">一戸建て<input type="hidden" name="entry_type" value="<?= $entry_type ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">情報源固有の物件番号</th>
+		  <td class="post-serial page-serial column-serial"><input type="text" name="entry_serial" size="20" value="<?= esc_attr($entry_serial) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">所在地</th>
+		  <td class="post-address page-address column-address"><select name="entry_pref_code" autocomplete="off">
+			  <option value="">都道府県を選択</option>
+<?php
+foreach ($nn4_arr_pref as $pref_code => $pref_name) {
+?>
+			  <option value="<?= $pref_code ?>"<?php if ($entry_pref_code == $pref_code) { ?> selected<?php } ?>><?= $pref_code ?> <?= $pref_name ?></option>
+<?php
+}
+?>
+		  </select><input type="text" name="entry_address1" size="20" placeholder="市区郡" value="<?= esc_attr($entry_address1) ?>" /><input type="text" name="entry_address2" size="40" value="<?= esc_attr($entry_address2) ?>" autocomplete="off" /><br />
+			補足 <input type="text" name="entry_address_memo" size="40" value="<?= esc_attr($entry_address_memo) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">最寄り駅</th>
+		  <td class="post-station page-station column-station"><input type="hidden" id="entry-transport" name="entry_transport" value="<?= esc_attr($entry_transport) ?>" /><select id="entry-station-id[0]" onChange="updateTransport(0, 'station')" autocomplete="off">
+			  <option value="">最寄り駅を選択</option>
+<?php
+foreach ($nn4_arr_station as $station_id => $station_name) {
+?>
+			  <option value="<?= $station_id ?>"<?php if ($entry_transport_decoded[0]['railway_station_id'] == $station_id) { ?> selected<?php } ?>><?= $station_name ?></option>
+<?php
+}
+?>
+		  </select>から 徒歩<input type="text" id="entry-minutes-by-foot[0]" size="5" value="<?= esc_attr($entry_transport_decoded[0]['minutes']) ?>" placeholder="数値" onChange="updateTransport(0, 'minutes')" autocomplete="off" style="text-align: right;" />分<br />
+		  <select id="entry-station-id[1]" onChange="updateTransport(1, 'station')" autocomplete="off">
+			  <option value="">最寄り駅を選択</option>
+<?php
+foreach ($nn4_arr_station as $station_id => $station_name) {
+?>
+			  <option value="<?= $station_id ?>"<?php if ($entry_transport_decoded[1]['railway_station_id'] == $station_id) { ?> selected<?php } ?>><?= $station_name ?></option>
+<?php
+}
+?>
+		  </select>から 徒歩<input type="text" id="entry-minutes-by-foot[1]" size="5" value="<?= esc_attr($entry_transport_decoded[1]['minutes']) ?>" placeholder="数値" onChange="updateTransport(1, 'minutes')" autocomplete="off" style="text-align: right;" />分<br />
+		  <select id="entry-station-id[2]" onChange="updateTransport(2, 'station')" autocomplete="off">
+			  <option value="">最寄り駅を選択</option>
+<?php
+foreach ($nn4_arr_station as $station_id => $station_name) {
+?>
+			  <option value="<?= $station_id ?>"<?php if ($entry_transport_decoded[2]['railway_station_id'] == $station_id) { ?> selected<?php } ?>><?= $station_name ?></option>
+<?php
+}
+?>
+		  </select>から 徒歩<input type="text" id="entry-minutes-by-foot[2]" size="5" value="<?= esc_attr($entry_transport_decoded[2]['minutes']) ?>" placeholder="数値" onChange="updateTransport(2, 'minutes')" autocomplete="off" style="text-align: right;" />分</td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">価格</th>
+		  <td class="post-price page-price column-price"><input type="text" name="entry_price" size="10" value="<?= esc_attr($entry_price) ?>" placeholder="数値" autocomplete="off" style="text-align: right;" />円 ～ <input type="text" name="entry_price_max" size="10" value="<?= esc_attr($entry_price_max) ?>" placeholder="数値" autocomplete="off" style="text-align: right;" />円<br />
+			補足 <input type="text" name="entry_price_memo" size="40" value="<?= esc_attr($entry_price_memo) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">新築/中古</th>
+		  <td class="post-flg-new page-flg-new column-flg-new"><select name="entry_flg_new" autocomplete="off">
+			  <option value="">選択</option>
+			  <option value="1"<?php if ($entry_flg_new == 1) { ?> selected<?php } ?>>新築</option>
+			  <option value="0"<?php if ($entry_flg_new == 0) { ?> selected<?php } ?>>中古</option>
+		  </select></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">築年月</th>
+		  <td class="post-built-on page-built-on column-built-on"><input type="text" name="entry_built_on" size="40" value="<?= esc_attr($entry_built_on) ?>" placeholder="YYYY もしくは YYYY-MM" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">間取り</th>
+		  <td class="post-room-layout page-room-layout column-room-layout"><textarea name="entry_room_layout" cols="40" autocomplete="off" style="height: 200px; resize: none;"><?= esc_html($entry_room_layout) ?></textarea></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">建物構造</th>
+		  <td class="post-bldg-structure page-bldg-structure column-bldg-structure"><input type="text" name="entry_bldg_structure" size="40" value="<?= esc_attr($entry_bldg_structure) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">階建</th>
+		  <td class="post-num-stairs page-num-stairs column-num-stairs"><input type="text" id="entry-num-stairs" name="entry_num_stairs" size="5" value="<?= esc_attr($entry_num_stairs) ?>" placeholder="数値" autocomplete="off" style="text-align: right;" />階建<br />
+		  補足 <input type="text" name="entry_num_stairs_memo" size="40" value="<?= esc_attr($entry_num_stairs_memo) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">駐車スペース</th>
+		  <td class="post-parking-space page-parking-space column-parking-space"><textarea name="entry_parking_space" cols="40" autocomplete="off" style="height: 200px; resize: none;"><?= esc_html($entry_parking_space) ?></textarea></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">建物面積</th>
+		  <td class="post-bldg-dim page-bldg-dim column-bldg-dim"><input type="text" id="entry-bldg-dim" name="entry_bldg_dim" size="10" value="<?= esc_attr($entry_bldg_dim) ?>" placeholder="数値" autocomplete="off" style="text-align: right;" onChange="updateLandDim('')" />m<sup>2</sup> ～ <input type="text" id="entry-bldg-dim-max" name="entry_bldg_dim_max" size="10" value="<?= esc_attr($entry_bldg_dim_max) ?>" placeholder="数値" autocomplete="off" style="text-align: right;" onChange="updateLandDim('-max')" />m<sup>2</sup><br />
+		  補足 <input type="text" name="entry_bldg_dim_memo" size="40" value="<?= esc_attr($entry_bldg_dim_memo) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">土地面積</th>
+		  <td class="post-land-dim page-land-dim column-land-dim"><input type="text" id="entry-land-dim" name="entry_land_dim" size="10" value="<?= esc_attr($entry_land_dim) ?>" placeholder="数値" autocomplete="off" style="text-align: right;" onChange="updateLandDim('')" />m<sup>2</sup> ～ <input type="text" id="entry-land-dim-max" name="entry_land_dim_max" size="10" value="<?= esc_attr($entry_land_dim_max) ?>" placeholder="数値" autocomplete="off" style="text-align: right;" onChange="updateLandDim('-max')" />m<sup>2</sup><br />
+		  補足 <input type="text" name="entry_land_dim_memo" size="40" value="<?= esc_attr($entry_land_dim_memo) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">坪数</th>
+		  <td class="post-pyeong page-pyeong column-pyeong"><input type="text" id="entry-pyeong" name="entry_pyeong" size="10" value="<?= esc_attr($entry_pyeong) ?>" placeholder="数値" autocomplete="off" style="text-align: right;" onChange="updateLandDim('')" />坪 ～ <input type="text" id="entry-pyeong-max" name="entry_pyeong_max" size="10" value="<?= esc_attr($entry_pyeong_max) ?>" placeholder="数値" autocomplete="off" style="text-align: right;" onChange="updateLandDim('-max')" />坪<br />
+		  補足 <input type="text" name="entry_pyeong_memo" size="40" value="<?= esc_attr($entry_pyeong_memo) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">私道負担面積</th>
+		  <td class="post-driveway-dim page-driveway-dim column-driveway-dim"><input type="text" name="entry_driveway_dim" size="10" value="<?= esc_attr($entry_driveway_dim) ?>" placeholder="数値" autocomplete="off" style="text-align: right;" />m<sup>2</sup><br />
+		  補足 <input type="text" name="entry_driveway_dim_memo" size="40" value="<?= esc_attr($entry_driveway_dim_memo) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">セットバック</th>
+		  <td class="post-setback page-setback column-setback"><input type="text" name="entry_setback" size="40" value="<?= esc_attr($entry_setback) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">建ぺい率</th>
+		  <td class="post-bldg-coverage page-bldg-coverage column-bldg-coverage"><input type="text" name="entry_bldg_coverage" size="5" value="<?= esc_attr($entry_bldg_coverage) ?>" placeholder="数値" autocomplete="off" style="text-align: right;" />%<br />
+			補足 <input type="text" name="entry_bldg_coverage_memo" size="40" value="<?= esc_attr($entry_bldg_coverage_memo) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">容積率</th>
+		  <td class="post-plot-ratio page-plot-ratio column-plot-ratio"><input type="text" name="entry_plot_ratio" size="5" value="<?= esc_attr($entry_plot_ratio) ?>" placeholder="数値" autocomplete="off" style="text-align: right;" />%<br />
+			補足 <input type="text" name="entry_plot_ratio_memo" size="40" value="<?= esc_attr($entry_plot_ratio_memo) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">土地権利</th>
+		  <td class="post-land-ownership page-land-ownership column-land-ownership"><select name="entry_land_ownership_id" autocomplete="off">
+			  <option value="">土地権利を選択</option>
+<?php
+foreach ($nn4_estate_arr_land_ownership as $land_ownership_id => $land_ownership_name) {
+?>
+			  <option value="<?= $land_ownership_id ?>"<?php if ($entry_land_ownership_id == $land_ownership_id) { ?> selected<?php } ?>><?= $land_ownership_name ?></option>
+<?php
+}
+?>
+		  </select><br />
+		  借地権 補足 <input type="text" name="entry_land_lease_memo" size="40" value="<?= esc_attr($entry_land_lease_memo) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">地目</th>
+		  <td class="post-land-category page-land-category column-land-category"><input type="text" name="entry_land_category" size="40" value="<?= esc_attr($entry_land_category) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">用途地域</th>
+		  <td class="post-zoning page-zoning column-zoning"><input type="text" name="entry_zoning" size="40" value="<?= esc_attr($entry_zoning) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">都市計画</th>
+		  <td class="post-area-control page-area-control column-area-control"><input type="text" name="entry_area_control" size="40" value="<?= esc_attr($entry_area_control) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">法令上の制限</th>
+		  <td class="post-restriction page-restriction column-restriction"><textarea name="entry_restriction" cols="40" autocomplete="off" style="height: 200px; resize: none;"><?= esc_html($entry_restriction) ?></textarea></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">国土法届出</th>
+		  <td class="post-mlit-nmbr page-mlit-nmbr column-mlit-nmbr"><input type="text" name="entry_mlit_nmbr" size="40" value="<?= esc_attr($entry_mlit_nmbr) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">接道状況</th>
+		  <td class="post-abutting-road page-abutting-road column-abutting-road"><textarea name="entry_abutting_road" cols="40" autocomplete="off" style="height: 200px; resize: none;"><?= esc_html($entry_abutting_road) ?></textarea></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">地勢</th>
+		  <td class="post-landscape page-landscape column-landscape"><input type="text" name="entry_landscape" size="40" value="<?= esc_attr($entry_landscape) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">現況</th>
+		  <td class="post-current-state page-current-state column-current-state"><input type="text" name="entry_current_state" size="40" value="<?= esc_attr($entry_current_state) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">引渡し</th>
+		  <td class="post-delivery page-delivery column-delivery"><input type="text" name="entry_delivery" size="40" value="<?= esc_attr($entry_delivery) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">引渡し条件</th>
+		  <td class="post-delivery-cond page-delivery-cond column-delivery-cond"><input type="text" name="entry_delivery_cond" size="40" value="<?= esc_attr($entry_delivery_cond) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">入居日</th>
+		  <td class="post-available-from page-available-from column-available-from"><input type="text" name="entry_available_from" size="40" value="<?= esc_attr($entry_available_from) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">設備</th>
+		  <td class="post-equipments page-equipments column-equipments"><textarea name="entry_equipments" cols="40" autocomplete="off" style="height: 200px; resize: none;"><?= esc_html($entry_equipments) ?></textarea></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">特記事項</th>
+		  <td class="post-special-instr page-special-instr column-special-instr"><textarea name="entry_special_instr" cols="40" autocomplete="off" style="height: 200px; resize: none;"><?= esc_html($entry_special_instr) ?></textarea></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">建築確認番号</th>
+		  <td class="post-bldg-check-nmbr page-bldg-check-nmbr column-bldg-check-nmbr"><input type="text" name="entry_bldg_check_nmbr" size="40" value="<?= esc_attr($entry_bldg_check_nmbr) ?>" autocomplete="off" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">備考</th>
+		  <td class="post-note page-note column-note"><textarea name="entry_note" cols="40" autocomplete="off" style="height: 200px; resize: none;"><?= esc_html($entry_note) ?></textarea></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">取扱業者</th>
+		  <td class="post-agent page-agent column-agent"><input type="hidden" id="entry-agent" name="entry_agent" value="<?= esc_attr($entry_agent) ?>" /><select id="entry-agent-id[0]" onChange="updateAgent(0, 'agent')" autocomplete="off">
+			  <option value="">取扱業者を選択</option>
+<?php
+foreach ($nn4_estate_arr_agent as $agent_id => $agent_name) {
+?>
+			  <option value="<?= $agent_id ?>"<?php if (isset($entry_agent_decoded[0]) && $entry_agent_decoded[0]['id'] == $agent_id) { ?> selected<?php } ?>><?= $agent_name ?></option>
+<?php
+}
+?>
+			</select> 取引態様<select id="entry-agent-position-id[0]" onChange="updateAgent(0, 'position')" autocomplete="off">
+			  <option value="">取引態様を選択</option>
+<?php
+foreach ($nn4_estate_arr_agent_position as $agent_position_id => $agent_position_name) {
+?>
+			  <option value="<?= $agent_position_id ?>"<?php if (isset($entry_agent_decoded[0]) && $entry_agent_decoded[0]['position_id'] == $agent_position_id) { ?> selected<?php } ?>><?= $agent_position_name ?></option>
+<?php
+}
+?>
+			</select><br />
+			<select id="entry-agent-id[1]" onChange="updateAgent(1, 'agent')" autocomplete="off">
+			  <option value="">取扱業者を選択</option>
+<?php
+foreach ($nn4_estate_arr_agent as $agent_id => $agent_name) {
+?>
+			  <option value="<?= $agent_id ?>"<?php if (isset($entry_agent_decoded[1]) && $entry_agent_decoded[1]['id'] == $agent_id) { ?> selected<?php } ?>><?= $agent_name ?></option>
+<?php
+}
+?>
+			</select> 取引態様<select id="entry-agent-position-id[1]" onChange="updateAgent(1, 'position')" autocomplete="off">
+			  <option value="">取引態様を選択</option>
+<?php
+foreach ($nn4_estate_arr_agent_position as $agent_position_id => $agent_position_name) {
+?>
+			  <option value="<?= $agent_position_id ?>"<?php if (isset($entry_agent_decoded[1]) && $entry_agent_decoded[1]['position_id'] == $agent_position_id) { ?> selected<?php } ?>><?= $agent_position_name ?></option>
+<?php
+}
+?>
+			</select><br />
+			<select id="entry-agent-id[2]" onChange="updateAgent(2, 'agent')" autocomplete="off">
+			  <option value="">取扱業者を選択</option>
+<?php
+foreach ($nn4_estate_arr_agent as $agent_id => $agent_name) {
+?>
+			  <option value="<?= $agent_id ?>"<?php if (isset($entry_agent_decoded[2]) && $entry_agent_decoded[2]['id'] == $agent_id) { ?> selected<?php } ?>><?= $agent_name ?></option>
+<?php
+}
+?>
+			</select> 取引態様<select id="entry-agent-position-id[2]" onChange="updateAgent(2, 'position')" autocomplete="off">
+			  <option value="">取引態様を選択</option>
+<?php
+foreach ($nn4_estate_arr_agent_position as $agent_position_id => $agent_position_name) {
+?>
+			  <option value="<?= $agent_position_id ?>"<?php if (isset($entry_agent_decoded[2]) && $entry_agent_decoded[2]['position_id'] == $agent_position_id) { ?> selected<?php } ?>><?= $agent_position_name ?></option>
+<?php
+}
+?>
+			</select><br />
+			<select id="entry-agent-id[3]" onChange="updateAgent(3, 'agent')" autocomplete="off">
+			  <option value="">取扱業者を選択</option>
+<?php
+foreach ($nn4_estate_arr_agent as $agent_id => $agent_name) {
+?>
+			  <option value="<?= $agent_id ?>"<?php if (isset($entry_agent_decoded[3]) && $entry_agent_decoded[3]['id'] == $agent_id) { ?> selected<?php } ?>><?= $agent_name ?></option>
+<?php
+}
+?>
+			</select> 取引態様<select id="entry-agent-position-id[3]" onChange="updateAgent(3, 'position')" autocomplete="off">
+			  <option value="">取引態様を選択</option>
+<?php
+foreach ($nn4_estate_arr_agent_position as $agent_position_id => $agent_position_name) {
+?>
+			  <option value="<?= $agent_position_id ?>"<?php if (isset($entry_agent_decoded[3]) && $entry_agent_decoded[3]['position_id'] == $agent_position_id) { ?> selected<?php } ?>><?= $agent_position_name ?></option>
+<?php
+}
+?>
+			</select><br />
+			<select id="entry-agent-id[4]" onChange="updateAgent(4, 'agent')" autocomplete="off">
+			  <option value="">取扱業者を選択</option>
+<?php
+foreach ($nn4_estate_arr_agent as $agent_id => $agent_name) {
+?>
+			  <option value="<?= $agent_id ?>"<?php if (isset($entry_agent_decoded[4]) && $entry_agent_decoded[4]['id'] == $agent_id) { ?> selected<?php } ?>><?= $agent_name ?></option>
+<?php
+}
+?>
+			</select> 取引態様<select id="entry-agent-position-id[4]" onChange="updateAgent(4, 'position')" autocomplete="off">
+			  <option value="">取引態様を選択</option>
+<?php
+foreach ($nn4_estate_arr_agent_position as $agent_position_id => $agent_position_name) {
+?>
+			  <option value="<?= $agent_position_id ?>"<?php if (isset($entry_agent_decoded[4]) && $entry_agent_decoded[4]['position_id'] == $agent_position_id) { ?> selected<?php } ?>><?= $agent_position_name ?></option>
+<?php
+}
+?>
+			</select></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">	
+		  <th class="manage-column">画像</th>
+		  <td class="post-image page-image column-image"><button id="image-uploader-button">画像を選択</button><span id="image-elem"><input type="hidden" id="entry-image" name="entry_image" value="<?= esc_attr($entry_image) ?>" /></span>
+			<div id="image-preview" class="image-preview"><?php
+for ($i = 0; $i < count($entry_image_decoded); $i++) {
+?>
+			  <div>
+				<input type="text" id="image_key[<?= $i ?>]" value="<?= esc_attr($entry_image_decoded[$i][$apid . '_aux']['image_key']) ?>" title="テンプレートで使用する画像識別用のキー" placeholder="画像識別用" onChange="updateImageKey(<?= $i ?>)" /><br />
+				<img src="<?= $entry_image_decoded[$i]['files'][0]['url'] ?>" alt="<?= $entry_image_decoded[$i]['alt'] ?>" title="<?= $entry_image_decoded[$i]['title'] ?>" />
+			  </div>
+<?php
+}
+?><div class="clear"></div></div></td>
+		</tr>
+	  </tbody>
+	</table>
+	<div class="alignleft actions" style="margin-top: 20px">
+	  <input type="submit" value="確認画面へ" class="button-primary" />
+	</div>
+  </form>
+</div>

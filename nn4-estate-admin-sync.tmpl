@@ -1,0 +1,28 @@
+<!-- -*- mode: html; tab-width: 4; coding: utf-8; -*- -->
+<?php
+$this_script_name = $_SERVER['SCRIPT_NAME'];
+
+if (isset($_REQUEST['page'])) {
+	$this_page = $_REQUEST['page'];
+} else {
+	$this_page = '';
+}
+?>
+<div class="wrap">
+<?php
+if ($flg_updated) {
+?>
+  <div id="message" class="updated updated-message">
+	<p>NN4 サーバーとの同期が完了しました。</p>
+  </div>
+<?php
+}
+?>
+  <h2>サーバー同期</h2>
+  <p>NN4 サーバーの不動産情報と同期させます。</p>
+  <form action="<?= $this_script_name ?>" method="get">
+	<input type="hidden" name="page" value="<?= $this_page ?>" />
+    <input type="hidden" name="mode" value="update" />
+	<p class="submit"><input type="submit" class="button-primary" value="同期を実行" /></p>
+  </form>
+</div>

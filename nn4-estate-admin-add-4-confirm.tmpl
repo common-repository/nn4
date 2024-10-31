@@ -1,0 +1,234 @@
+<!-- -*- mode: html; tab-width: 4; coding: utf-8; -*- -->
+<style type="text/css">
+<!--
+.column-name {
+  width: 20%;
+}
+div.image-preview img {
+  max-width: 100px;
+  max-height: 100px;
+  margin: 10px;
+  border: 1px sold #ccc;
+}
+div.image-preview input {
+  width: 100px;
+  margin: 5px 10px;
+  padding: 0;
+  border: 1px solid #fff;
+}
+div.image-preview div {
+  float: left;
+  text-align: center;
+}
+-->
+</style>
+<?php
+if ($mode == 'confirm') {
+	$op_type = 'add';
+	$op_name = '新規追加';
+	$op_input = 'input';
+	$op_exec = 'exec';
+} else {  // $mode == 'editconfirm'
+	$op_type = 'edit';
+	$op_name = '編集';
+	$op_input = 'editinput';
+	$op_exec = 'editexec';
+}
+
+$this_script_name = $_SERVER['SCRIPT_NAME'];
+if (isset($_REQUEST['page'])) {
+	$this_page = $_REQUEST['page'];
+} else {
+	$this_page = '';
+}
+?>
+<div class="wrap">
+  <h2><?= $op_name ?> - 入力内容確認</h2>
+<?php
+if ($nn4_estate_last_err_msg != '') {
+?>
+  <div id="message" class="error-message"><p><?= nl2br(esc_html(implode("\n", $nn4_estate_last_err_msg))) ?></p></div>
+<?php
+}
+?>
+  <form id="posts-filter" name="posts_filter" action="<?= $this_script_name ?>" method="get">
+	<input type="hidden" name="page" value="<?= $this_page ?>" />
+	<input type="hidden" name="mode" value="<?= $op_exec ?>" />
+<?php
+	if ($op_type == 'edit') {
+?>	<input type="hidden" name="entry_post_id" value="<?= $entry_post_id ?>" />
+<?php
+	}
+?>	<input type="hidden" name="chktoken" value="<?= $chktoken ?>" />
+	<div class="alignleft actions" style="margin-bottom: 20px">
+	  <input type="button" value="入力画面に戻る" class="button" onClick="document.posts_filter.mode.value = 'input'; document.posts_filter.submit();" />
+	  <input type="submit" value="登録実行" class="button-primary" />
+	</div>
+	<table class="wp-list-table widefat fixed posts">
+	  <thead>
+		<tr>
+		  <th id="name" class="manage-column column-name" style="" scope="col"><span>項目名</span></th>
+		  <th id="value" class="manage-column column-value" style="" scope="col"><span>値</span></th>
+		</tr>
+	  </thead>
+	  <tbody id="the-list">
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">物件名</th>
+		  <td class="post-name page-name column-name"><?= esc_html($entry_name) ?><input type="hidden" name="entry_name" value="<?= esc_attr($entry_name) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">物件種目</th>
+		  <td class="post-type page-type column-type"><?= esc_html($nn4_estate_arr_type[$entry_type]) ?><input type="hidden" name="entry_type" value="<?= $entry_type ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">情報源固有の物件番号</th>
+		  <td class="post-serial page-serial column-serial"><?= esc_html($entry_serial) ?><input type="hidden" name="entry_serial" value="<?= esc_attr($entry_serial) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">所在地</th>
+		  <td class="post-address page-address column-address"><?= esc_html($nn4_arr_pref[$entry_pref_code]) ?><input type="hidden" name="entry_pref_code" value="<?= esc_attr($entry_pref_code) ?>" /><?= esc_html($entry_address1) ?><input type="hidden" name="entry_address1" value="<?= esc_attr($entry_address1) ?>" /><?= esc_html($entry_address2) ?><input type="hidden" name="entry_address2" value="<?= esc_attr($entry_address2) ?>" /><br />
+			<?= esc_html($entry_address_memo) ?><input type="hidden" name="entry_address_memo" value="<?= esc_attr($entry_address_memo) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">最寄り駅</th>
+		  <td class="post-station page-station column-station"><?php
+foreach ($entry_transport_decoded as $transport) {
+	if ($transport['railway_station_id'] != '') {
+?><?= esc_html($nn4_arr_station[$transport['railway_station_id']]) ?>から 徒歩<?= esc_html($transport['minutes']) ?>分<br /><?php
+	}
+}
+?><input type="hidden" name="entry_transport" value="<?= esc_attr($entry_transport) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">月額賃貸料</th>
+		  <td class="post-rent page-rent column-rent"><?php if ($entry_rent != '') { ?><?= esc_html(number_format($entry_rent)) ?>円<?php } ?><?php if ($entry_rent_max != '') { ?> ～ <?= esc_html(number_format($entry_rent_max)) ?>円<?php } ?><input type="hidden" name="entry_rent" value="<?= esc_attr($entry_rent) ?>" /><input type="hidden" name="entry_rent_max" value="<?= esc_attr($entry_rent_max) ?>" /><br />
+			<?= esc_html($entry_rent_memo) ?><input type="hidden" name="entry_rent_memo" value="<?= esc_attr($entry_rent_memo) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">月額共益費</th>
+		  <td class="post-common-area-charge page-common-area-charge column-common-area-charge"><?= esc_html(number_format($entry_common_area_charge)) ?>円<input type="hidden" name="entry_common_area_charge" value="<?= esc_attr($entry_common_area_charge) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">月額管理費</th>
+		  <td class="post-service-charge page-service-charge column-service-charge"><?= esc_html(number_format($entry_service_charge)) ?>円<input type="hidden" name="entry_service_charge" value="<?= esc_attr($entry_service_charge) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">敷金/保証金</th>
+		  <td class="post-deposit-rate page-deposit-rate column-deposit-rate">月額賃貸料の <?= esc_html($entry_deposit_rate) ?> ヶ月分<input type="hidden" name="entry_deposit_rate" value="<?= esc_attr($entry_deposit_rate) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">礼金/権利金</th>
+		  <td class="post-key-money-rate page-key-money-rate column-key-money-rate">月額賃貸料の <?= esc_html($entry_key_money_rate) ?> ヶ月分<input type="hidden" name="entry_key_money_rate" value="<?= esc_attr($entry_key_money_rate) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">仲介手数料</th>
+		  <td class="post-agent-charge-rate page-agent-charge-rate column-agent-charge-rate">月額賃貸料の <?= esc_html($entry_agent_charge_rate) ?> ヶ月分<input type="hidden" name="entry_agent_charge_rate" value="<?= esc_attr($entry_agent_charge_rate) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">敷引/保証金償却</th>
+		  <td class="post-amoritization-rate page-amoritization-rate column-amoritization-rate">月額賃貸料の <?= esc_html($entry_amoritization_rate) ?> ヶ月分<input type="hidden" name="entry_amoritization_rate" value="<?= esc_attr($entry_amoritization_rate) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">その他一時金</th>
+		  <td class="post-lump-sum page-lump-sum column-lump-sum"><?php if ($entry_lump_sum != '') { ?><?= esc_html(number_format($entry_lump_sum)) ?>円<?php } ?><input type="hidden" name="entry_lump_sum" value="<?= esc_attr($entry_lump_sum) ?>" /><br />
+			<?= esc_html($entry_lump_sum_memo) ?><input type="hidden" name="entry_lump_sum_memo" value="<?= esc_attr($entry_lump_sum_memo) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">契約期間</th>
+		  <td class="post-contract-period page-contract-period column-contract-period"><?= esc_html($entry_contract_period) ?><input type="hidden" name="entry_contract_period" value="<?= esc_attr($entry_contract_period) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">敷金/保証金</th>
+		  <td class="post-renewal-charge-rate page-renewal-charge-rate column-renewal-charge-rate">月額賃貸料の <?= esc_html($entry_renewal_charge_rate) ?> ヶ月分<input type="hidden" name="entry_renewal_charge_rate" value="<?= esc_attr($entry_renewal_charge_rate) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">保険内容</th>
+		  <td class="post-insurance page-insurance column-insurance"><?= nl2br(esc_html($entry_insurance)) ?><input type="hidden" name="entry_insurance" value="<?= esc_attr($entry_insurance) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">築年月</th>
+		  <td class="post-built-on page-built-on column-built-on"><?= esc_html($entry_built_on) ?><input type="hidden" name="entry_built_on" value="<?= esc_attr($entry_built_on) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">間取り</th>
+		  <td class="post-room-layout page-room-layout column-room-layout"><?= nl2br(esc_html($entry_room_layout)) ?><input type="hidden" name="entry_room_layout" value="<?= esc_attr($entry_room_layout) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">面積</th>
+		  <td class="post-floor-space page-floor-space column-floor-space"><?php if ($entry_floor_space != '') { ?><?= esc_html($entry_floor_space) ?>m<sup>2</sup><?php } ?><input type="hidden" name="entry_floor_space" value="<?= esc_attr($entry_floor_space) ?>" /><br />
+			<?= esc_html($entry_floor_space_memo) ?><input type="hidden" name="entry_floor_space_memo" value="<?= esc_attr($entry_floor_space_memo) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">建物構造</th>
+		  <td class="post-bldg-structure page-bldg-structure column-bldg-structure"><?= esc_html($entry_bldg_structure) ?><input type="hidden" name="entry_bldg_structure" value="<?= esc_attr($entry_bldg_structure) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">所在階/階建</th>
+		  <td class="post-floor page-floor column-floor"><?= esc_html($entry_floor) ?><input type="hidden" name="entry_floor" value="<?= esc_attr($entry_floor) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">駐車スペース</th>
+		  <td class="post-parking-space page-parking-space column-parking-space"><?= nl2br(esc_html($entry_parking_space)) ?><input type="hidden" name="entry_parking_space" value="<?= esc_attr($entry_parking_space) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">建物名称</th>
+		  <td class="post-bldg-name page-bldg-name column-bldg-name"><?= esc_html($entry_bldg_name) ?><input type="hidden" name="entry_bldg_name" value="<?= esc_attr($entry_bldg_name) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">現況</th>
+		  <td class="post-current-state page-current-state column-current-state"><?= esc_html($entry_current_state) ?><input type="hidden" name="entry_current_state" value="<?= esc_attr($entry_current_state) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">入居可能日</th>
+		  <td class="post-available-from page-available-from column-available-from"><?= esc_html($entry_available_from) ?><input type="hidden" name="entry_available_from" value="<?= esc_attr($entry_available_from) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">設備</th>
+		  <td class="post-equipments page-equipments column-equipments"><?= nl2br(esc_html($entry_equipments)) ?><input type="hidden" name="entry_equipments" value="<?= esc_attr($entry_equipments) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">特記事項</th>
+		  <td class="post-special-instr page-special-instr column-special-instr"><?= nl2br(esc_html($entry_special_instr)) ?><input type="hidden" name="entry_special_instr" value="<?= esc_attr($entry_special_instr) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">ペット</th>
+		  <td class="post-pets page-pets column-pets"><?= esc_html($entry_pets) ?><input type="hidden" name="entry_pets" value="<?= esc_attr($entry_pets) ?>" /></td>
+		</tr>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">
+		  <th class="manage-column">備考</th>
+		  <td class="post-note page-note column-note"><?= nl2br(esc_html($entry_note)) ?><input type="hidden" name="entry_note" value="<?= esc_attr($entry_note) ?>" /></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 iedit level-0">
+		  <th class="manage-column">取扱業者</th>
+		  <td class="post-agent page-agent column-agent"><input type="hidden" name="entry_agent" value="<?= esc_attr($entry_agent) ?>" /><?php
+for ($i = 0; $i < count($entry_agent_decoded); $i++) {
+	if ($entry_agent_decoded[$i]['id'] != '') {
+?><?= esc_html($nn4_estate_arr_agent[$entry_agent_decoded[$i]['id']]) ?> (<?= $nn4_estate_arr_agent_position[$entry_agent_decoded[$i]['position_id']] ?>)<br />
+<?php
+	}
+}
+?></td>
+		</tr>
+		<tr class="post type-post status-draft format-standard hentry category-1 alternate iedit level-0">	
+		  <th class="manage-column">画像</th>
+		  <td class="post-image page-image column-image"><span id="image-elem"><input type="hidden" name="entry_image" value="<?= esc_attr($entry_image) ?>" /></span>
+			<div id="image-preview" class="image-preview"><?php
+for ($i = 0; $i < count($entry_image_decoded); $i++) {
+?>
+			  <div>
+				<?= esc_html($entry_image_decoded[$i][$apid . '_aux']['image_key']) ?><br />
+				<img src="<?= $entry_image_decoded[$i]['files'][0]['url'] ?>" alt="<?= $entry_image_decoded[$i]['alt'] ?>" title="<?= $entry_image_decoded[$i]['title'] ?>" />
+			  </div>
+<?php
+}
+?><div class="clear"></div></div></td>
+		</tr>
+	  </tbody>
+	</table>
+	<div class="alignleft actions" style="margin-top: 20px">
+	  <input type="button" value="入力画面に戻る" class="button" onClick="document.posts_filter.mode.value = '<?= $op_input ?>'; document.posts_filter.submit();" />
+	  <input type="submit" value="登録実行" class="button-primary" />
+	</div>
+  </form>
+</div>

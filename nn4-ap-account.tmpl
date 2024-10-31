@@ -1,0 +1,32 @@
+<!-- -*- mode: html; tab-width: 4; coding: utf-8; -*- -->
+<div class="wrap">
+<?php
+if ($_REQUEST['settings-updated']) {
+?>
+  <div id="message" class="updated updated-message">
+	<p>設定を更新しました。</p>
+  </div>
+<?php
+}
+?>
+  <h2>NN4 APアカウント設定</h2>
+  <form action="options.php" method="post">
+    <input type="hidden" name="action" value="update" />
+	<input type="hidden" name="page_options" value="nn4_apid,nn4_appw" />
+<?php
+	wp_nonce_field('update-options');
+?>
+    <table class="form-table">
+	  <tr valign="top">
+		<th scope="row"><label for="apid">APコード</label></th>
+		<td><input name="nn4_apid" type="text" id="apid" value="<?php echo htmlspecialchars($apid) ?>" class="regular-text" /></td>
+	  </tr>
+	  <tr valign="top">
+		<th scope="row"><label for="appw">パスワード</label></th>
+		<td><input name="nn4_appw" type="password" id="appw" value="" class="regular-text" /></td>
+	  </tr>
+	</table>
+	<p class="submit"><input type="submit" class="button-primary" value="<?php _e('Save Changes'); ?>" /></p>
+  </form>
+  <!-- /.wrap -->
+</div>

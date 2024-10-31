@@ -1,0 +1,53 @@
+<!-- -*- mode: html; tab-width: 4; coding: utf-8; -*- -->
+<?php
+$this_script_name = $_SERVER['SCRIPT_NAME'];
+if (isset($_REQUEST['page'])) {
+	$this_page = $_REQUEST['page'];
+} else {
+	$this_page = '';
+}
+
+$select_type_items = array('11' => '一戸建て',
+						   '21' => 'マンション',
+						   '31' => '土地',
+						   '41' => '賃貸一戸建て',
+						   '42' => '賃貸マンション',
+						   '43' => '賃貸アパート',
+						   '51' => '賃貸土地');
+foreach (array() as $s_type) {
+	foreach (array('rent', 'buy') as $s_agreement_type) {
+		if (($s_agreement_type == 'rent' && $s_type == 'condo')
+			|| ($s_agreement_type == 'buy' && $s_type == 'apartment')){
+			continue;
+		}
+	}
+}
+?>
+<div class="wrap">
+  <h2>新規追加 - 種目選択</h2>
+<?php
+if ($nn4_estate_last_err_msg != '') {
+?>
+  <div id="message" class="error-message"><p><?= nl2br(htmlspecialchars(implode("\n", $nn4_estate_last_err_msg))) ?></p></div>
+<?php
+}
+?>
+  <form id="posts-filter" action="<?= $this_script_name ?>" method="get">
+	<input type="hidden" name="page" value="<?= $this_page ?>" />
+	<input type="hidden" name="mode" value="input" />
+	<input type="hidden" name="chktoken" value="<?= $chktoken ?>" />
+	<div class="alignleft actions">
+	  <p><select name="entry_type">
+		  <option value="">種目を選択</option>
+<?php
+foreach ($select_type_items as $type_value => $type_text) {
+?>
+		  <option value="<?= $type_value ?>"<?php if ($entry_type == $type_value) { ?> selected<?php } ?>><?= $type_text ?></option>
+<?
+}
+?>
+	  </select></p>
+	  <input type="submit" value="入力画面へ" class="button-primary" />
+	</div>
+  </form>
+</div>
